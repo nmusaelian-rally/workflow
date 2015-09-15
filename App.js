@@ -3,10 +3,40 @@ Ext.define('CustomApp', {
     componentCls: 'app',
     field:'ScheduleState',
     tagOid: '43002192124', //cu in nmds
+    numberOfMonths: 6,
+    intervals:[],
     //project: '43001867747', //lb
     allowedValues:[],
     defects:[], //all cv tagged defects
     launch: function() {
+        this.getDates();
+        this.getDefectModel();
+    },
+    getDates:function(){
+        var now = new Date();
+        var firstDayOfThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        console.log('firstDayOfThisMonth',firstDayOfThisMonth); 
+        Date.prototype.calcFullMonths = function(monthOffset) {
+            var dt = new Date(firstDayOfThisMonth); 
+            dt.setMonth(dt.getMonth() - monthOffset);
+            return dt;
+        };
+        var howFarBack = (new Date()).calcFullMonths(this.numberOfMonths);
+        
+        
+        for(var m=1; m <= this.numberOfMonths; m++){
+            var lastDayOfThisMonth = new Date(howFarBack.getFullYear(), howFarBack.getMonth() + 1, 0);
+            var lastDayOfThisMonthEndOfDay = new Date(howFarBack.getFullYear(), howFarBack.getMonth() + 1, 0, 23,59,59);
+            var firstDayOfNextMonth = new Date(howFarBack.getFullYear(), howFarBack.getMonth() + 1, 1);
+            this.intervals.push({
+                'from'  :   howFarBack.toISOString(),
+                'to'    :   lastDayOfThisMonthEndOfDay.toISOString()
+            });
+            howFarBack = firstDayOfNextMonth;
+        }
+        console.log('intervals', this.intervals);
+    },
+    getDefectModel:function(){
         Rally.data.ModelFactory.getModel({
             type:'Defect',
             success: this.getAllowedValues,
