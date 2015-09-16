@@ -89,13 +89,11 @@ Ext.define('CustomApp', {
         });
     },
     getThroughput:function(){
-        var that = this;
         Ext.create('Rally.data.lookback.SnapshotStore', {
-            fetch    : ['ObjectID','_ValidFrom','_ValidTo','FormattedID','Project','_PreviousValues.Project','ScheduleState','_PreviousValues.ScheduleState','State','_PreviousValues.State'],
-            filters  : [{
-                property : '__At',
-                value    : 'current'
-            },
+            fetch    : ['ObjectID','_ValidFrom','_ValidTo','FormattedID','Project','ScheduleState','_PreviousValues.ScheduleState'],
+            find: {'_PreviousValues.ScheduleState':{$exists:true}},
+            //find: {'_PreviousValues.ScheduleState':{$ne:null}},
+            filters  : [
             {
                 property : '_TypeHierarchy',
                 value    : 'Defect'
@@ -114,7 +112,7 @@ Ext.define('CustomApp', {
             value : 'In-Progress'
             }
             ],
-            hydrate: ['ScheduleState','_PreviousValues.ScheduleState','State','_PreviousValues.State','Project','_PreviousValues.Project'],
+            hydrate: ['ScheduleState','_PreviousValues.ScheduleState','Project'],
             listeners: {
                 load: this.onSnapshotsLoaded, 
                 scope: this
@@ -122,7 +120,7 @@ Ext.define('CustomApp', {
             }).load({
                 params : {
                     compress : true,
-                    removeUnauthorizedSnapshots : false
+                    removeUnauthorizedSnapshots : true
                 }
             });
         
@@ -130,7 +128,7 @@ Ext.define('CustomApp', {
     onSnapshotsLoaded:function(store, records){
         console.log('onSnapshotsLoaded', records.length);
         _.each(records, function(record) {
-            console.log(record);
+            console.log(record.data);
         });
     }
     
