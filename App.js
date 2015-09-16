@@ -5,7 +5,7 @@ Ext.define('CustomApp', {
     tagOid: '43002192124', //cu in nmds
     numberOfMonths: 6,
     intervals:[],
-    //project: '43001867747', //lb
+    projectOid: 43001867747, //lb
     allowedValues:[],
     defects:[], //all cv tagged defects
     launch: function() {
@@ -53,6 +53,8 @@ Ext.define('CustomApp', {
                     if (count === 0) {
                         console.log(this.allowedValues);
                         this.getDefects();
+                        this.getThroughput();
+                        
                     }
                 },this);
             },
@@ -84,6 +86,51 @@ Ext.define('CustomApp', {
         },this);
         _.each(this.defects,function(defect){
             console.log('defect:',defect.get('FormattedID'), defect.get('Project')._refObjectName);
+        });
+    },
+    getThroughput:function(){
+        var that = this;
+        Ext.create('Rally.data.lookback.SnapshotStore', {
+            fetch    : ['ObjectID','_ValidFrom','_ValidTo','FormattedID','Project','_PreviousValues.Project','ScheduleState','_PreviousValues.ScheduleState','State','_PreviousValues.State'],
+            filters  : [{
+                property : '__At',
+                value    : 'current'
+            },
+            {
+                property : '_TypeHierarchy',
+                value    : 'Defect'
+            },
+            {
+                property : '_ProjectHierarchy',
+                value: this.projectOid
+            },
+            {
+            property : 'ScheduleState', 
+            value : 'In-Progress'
+            },
+            {
+            property : '_PreviousValues.ScheduleState', 
+            operator : '<',
+            value : 'In-Progress'
+            }
+            ],
+            hydrate: ['ScheduleState','_PreviousValues.ScheduleState','State','_PreviousValues.State','Project','_PreviousValues.Project'],
+            listeners: {
+                load: this.onSnapshotsLoaded, 
+                scope: this
+            }
+            }).load({
+                params : {
+                    compress : true,
+                    removeUnauthorizedSnapshots : false
+                }
+            });
+        
+    },
+    onSnapshotsLoaded:function(store, records){
+        console.log('onSnapshotsLoaded', records.length);
+        _.each(records, function(record) {
+            console.log(record);
         });
     }
     
